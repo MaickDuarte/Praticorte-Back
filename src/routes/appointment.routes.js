@@ -1,8 +1,8 @@
 import express from "express";
-import { getAppointments } from "../controllers/appointment.controller.js";
+import { getAppointmentsByDate } from "../controllers/appointment.controller.js";
 
 const router = express.Router();
 
-router.get("/", getAppointments);
+router.get("/getAppointmentsByDate", getAppointmentsByDate);
 
 export default router;

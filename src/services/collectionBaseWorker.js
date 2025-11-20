@@ -10,7 +10,7 @@ const convertValue = (value) => {
 };
 
 // ======================================================================
-// Reuse Firestore Web "where()" objects
+// Reuse Firestore Web "where()" objects (converted to Admin SDK format)
 // ======================================================================
 const applyQueries = (ref, queries) => {
     if (!queries || queries.length === 0) return ref;
@@ -18,8 +18,9 @@ const applyQueries = (ref, queries) => {
     queries.forEach(q => {
         if (!q) return;
 
-        const field = q._fieldPath;
-        const op = q._opStr;
+        // pega o caminho real do campo vindo do Web SDK:
+        const field = q._field.canonicalString(); 
+        const op = q._op;
         const value = convertValue(q._value);
 
         ref = ref.where(field, op, value);
@@ -32,6 +33,7 @@ const applyQueries = (ref, queries) => {
 // GET ALL DOCUMENTS
 // ======================================================================
 export const getAllDocs = async ({ collection, queries }) => {
+    console.log("getAllDocs called with:", { collection, queries });
     try {
         let ref = db.collection(collection);
         ref = applyQueries(ref, queries);

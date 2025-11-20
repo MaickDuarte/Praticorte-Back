@@ -3,18 +3,17 @@ import { where } from "firebase/firestore";
 
 export const getAppointmentsByDate = async (req, res) => {
     try {
-        const { startDate, endDate } = req.query;
-        const establishmentId = req.estabelecimentoId; // vindo do auth middleware
+        const { startDate, endDate, establishmentId } = req.query;
 
-        if (!startDate || !endDate) {
-            return res.status(400).json({ error: "startDate e endDate são obrigatórios" });
+        if (!startDate || !endDate || !establishmentId) {
+            return res.status(400).json({
+                error: "startDate, endDate e establishmentId são obrigatórios"
+            })
         }
 
-        // Convertendo para Date
         const start = new Date(startDate);
         const end = new Date(endDate);
 
-        // Aqui usamos *exatamente* o mesmo formato que você usa no frontend
         const appointments = await getAllDocs({
             collection: "agendamentos",
             queries: [
