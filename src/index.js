@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import agendamentoRoutes from "./routes/agendamentos.routes.js";
+import appointmentRoutes from "./routes/appointment.routes.js";
 
 const app = express();
 
@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Rotas
-app.use("/agendamentos", agendamentoRoutes);
+app.use("/appointments", appointmentRoutes);
 
 app.get("/", (req, res) => {
   res.send("Praticorte Backend ON");
