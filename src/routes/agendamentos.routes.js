@@ -1,5 +1,5 @@
 import express from "express";
-import { getAgendamentos } from "../controllers/agendamento.controller.js";
+import { getAgendamentos } from "../controllers/agendamentos.controller.js";
 
 const router = express.Router();
 

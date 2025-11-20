@@ -1,10 +1,20 @@
 import admin from "firebase-admin";
-import serviceAccount from "../config/firebase-key.json" assert { type: "json" };
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Caminho da chave
+const serviceAccountPath = path.join(__dirname, "..", "firebase-key.json");
+
+// Inicializa o Firebase somente uma vez
 if (!admin.apps.length) {
-	admin.initializeApp({
-		credential: admin.credential.cert(serviceAccount)
-	});
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccountPath),
+    });
 }
 
-export const db = admin.firestore();
+const db = admin.firestore();
+
+export { db, admin };

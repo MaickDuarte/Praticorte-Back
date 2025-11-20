@@ -1,18 +1,20 @@
 import express from "express";
 import cors from "cors";
-import appointmentRoutes from "./routes/appointment.routes.js";
+import agendamentoRoutes from "./routes/agendamentos.routes.js";
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// Suas rotas
-app.use("/api/agendamentos", appointmentRoutes);
+// Rotas
+app.use("/agendamentos", agendamentoRoutes);
 
-// Pega a porta vinda do Cloud Run
+app.get("/", (req, res) => {
+  res.send("Praticorte Backend ON");
+});
+
 const PORT = process.env.PORT || 8080;
-
-// Inicia o servidor
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT} [${process.env.NODE_ENV}]`);
+  console.log("Servidor rodando na porta " + PORT);
 });
