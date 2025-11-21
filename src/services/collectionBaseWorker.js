@@ -32,8 +32,9 @@ const applyQueries = (ref, queries) => {
 // ======================================================================
 // GET ALL DOCUMENTS
 // ======================================================================
-export const getAllDocs = async ({ collection, queries }) => {
-    console.log("getAllDocs called with:", { collection, queries });
+export const getAllDocs = async ({ collection, queries, res }) => {
+    if (!validateQueries(queries, res)) return;
+
     try {
         let ref = db.collection(collection);
         ref = applyQueries(ref, queries);
@@ -45,8 +46,8 @@ export const getAllDocs = async ({ collection, queries }) => {
             .filter(item => item.isDeleted !== true);
 
     } catch (error) {
-        console.error("getAllDocs error:", error);
-        return [];
+        res.status(500).json({ error: "Erro ao buscar documentos" });
+        return;
     }
 };
 
@@ -141,3 +142,38 @@ export const deleteDocHard = async ({ collection, id }) => {
         throw error;
     }
 };
+
+export function validateQueries(queries, res) {
+    for (const q of queries) {
+
+        if (!q) {
+            res.status(400).json({
+                error: `Uma das queries é null ou undefined`
+            });
+            return false;
+        }
+
+        console.log(q)
+
+        const field = q._field?.segments?.join(".") || "campo_desconhecido";
+        const operator = q._op || "operador_desconhecido";
+        const value = q._value;
+
+        if (value === undefined || value === null || value === "") {
+            res.status(400).json({
+                error: `A query "${field}" (${operator}) recebeu um valor inválido: ${value}`
+            });
+            return false;
+        }
+
+        if (Array.isArray(value) && value.length === 0) {
+            res.status(400).json({
+                error: `A query "${field}" (${operator}) recebeu um array vazio`
+            });
+            return false;
+        }
+    }
+
+    return true;
+}
+

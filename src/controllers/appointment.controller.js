@@ -3,31 +3,20 @@ import { where } from "firebase/firestore";
 import { startOfDay, endOfDay } from 'date-fns';
 
 export const getAppointmentsByDate = async (req, res) => {
-    try {
-        const { startDate, endDate, establishmentId } = req.query;
-
-        if (!startDate || !endDate || !establishmentId) {
-            return res.status(400).json({
-                error: "startDate, endDate e establishmentId são obrigatórios"
-            })
-        }
-
+    const { startDate, endDate, establishmentId } = req.query
         const start = new Date(startDate);
         const end = new Date(endDate);
-
         const appointments = await getAllDocs({
             collection: "agendamentos",
             queries: [
                 where("estabelecimentoId", "==", establishmentId),
                 where("dateInfo.date", ">=", startOfDay(start)),
                 where("dateInfo.date", "<=", endOfDay(end))
-            ]
+            ],
+            res
         })
 
-        return res.json(appointments);
+    if (!appointments) return
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: "Erro ao buscar agendamentos" })
-    }
+    return res.json(appointments)
 }
