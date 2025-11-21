@@ -1,5 +1,6 @@
 import { getAllDocs } from "../services/collectionBaseWorker.js";
 import { where } from "firebase/firestore";
+import { startOfDay, endOfDay } from 'date-fns';
 
 export const getAppointmentsByDate = async (req, res) => {
     try {
@@ -18,15 +19,15 @@ export const getAppointmentsByDate = async (req, res) => {
             collection: "agendamentos",
             queries: [
                 where("estabelecimentoId", "==", establishmentId),
-                where("dateInfo.date", ">=", start),
-                where("dateInfo.date", "<=", end)
+                where("dateInfo.date", ">=", startOfDay(start)),
+                where("dateInfo.date", "<=", endOfDay(end))
             ]
-        });
+        })
 
         return res.json(appointments);
 
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Erro ao buscar agendamentos" });
+        return res.status(500).json({ error: "Erro ao buscar agendamentos" })
     }
-};
+}
