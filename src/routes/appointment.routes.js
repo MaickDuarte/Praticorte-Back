@@ -3,7 +3,7 @@ import { getAppointmentsByDate, getAppointmentByProviderAndDate } from "../contr
 
 const router = express.Router();
 
-router.get("/getAppointmentsByDate", getAppointmentsByDate);
-router.get("/getAppointmentByProviderAndDate", getAppointmentByProviderAndDate);
+router.post("/getAppointmentsByDate", getAppointmentsByDate);
+router.post("/getAppointmentByProviderAndDate", getAppointmentByProviderAndDate);
 
 export default router;
