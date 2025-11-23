@@ -1,14 +1,63 @@
 import { db } from "./firebase.service.js";
+import { v7 as uuidv7 } from "uuid";
 import { Timestamp } from "firebase-admin/firestore";
 
 // ======================================================================
 // Convert values automatically (Date -> Timestamp, null -> null, etc)
 // ======================================================================
+function convertDatesToFirestoreDate(obj) {
+  if (obj === null || obj === undefined) return obj;
+
+  // Já é Firestore timestamp -> converte para Date
+  if (isFirestoreTimestamp(obj)) {
+    return new Date(obj.seconds * 1000 + obj.nanoseconds / 1e6);
+  }
+
+  // String ISO → Date
+  if (typeof obj === "string" && isISODate(obj)) {
+    return new Date(obj);
+  }
+
+  // Já é Date → mantém
+  if (obj instanceof Date) {
+    return obj;
+  }
+
+  // Array → recursivo
+  if (Array.isArray(obj)) {
+    return obj.map(val => convertDatesToFirestoreDate(val));
+  }
+
+  // Objeto → recursivo
+  if (typeof obj === "object") {
+    const newObj = {};
+    for (const key in obj) {
+      newObj[key] = convertDatesToFirestoreDate(obj[key]);
+    }
+    return newObj;
+  }
+
+  return obj;
+}
+
+function isFirestoreTimestamp(obj) {
+  return (
+    obj &&
+    typeof obj.seconds === "number" &&
+    typeof obj.nanoseconds === "number"
+  );
+}
+
+function isISODate(value) {
+  const isoRegex =
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
+  return isoRegex.test(value) && !isNaN(Date.parse(value));
+}
+
 const convertValue = (value) => {
     if (value instanceof Date) return Timestamp.fromDate(value);
     return value;
 };
-
 // ======================================================================
 // Reuse Firestore Web "where()" objects (converted to Admin SDK format)
 // ======================================================================
@@ -34,7 +83,6 @@ const applyQueries = (ref, queries) => {
 // ======================================================================
 export const getAllDocs = async ({ collection, queries, res }) => {
     if (!validateQueries(queries, res)) return;
-
     try {
         let ref = db.collection(collection);
         ref = applyQueries(ref, queries);
@@ -76,19 +124,31 @@ export const getDocById = async ({ collection, id }) => {
 // ======================================================================
 export const addDoc = async ({ collection, data }) => {
     try {
-        const toSave = {};
+        let toSave = { ...data };
 
-        Object.keys(data).forEach(k => {
-            toSave[k] = convertValue(data[k]);
-        });
+        if (!toSave.estabelecimentoId) {
+            throw new Error("Campo obrigatório ausente: estabelecimentoId");
+        }
 
-        const result = await db.collection(collection).add(toSave);
+        if (!toSave.id) {
+            toSave.id = uuidv7();
+        }
+
+        toSave.createdAt = new Date();
+        toSave.isDeleted = false;
+
+        // Aqui converte tudo para Date (Firestore salva como timestamp)
+        toSave = convertDatesToFirestoreDate(toSave);
+
+        console.log("toSave", toSave);
+
+        const result = await db.collection(collection).doc(toSave.id).set(toSave);
 
         return { id: result.id, ...toSave };
 
     } catch (error) {
-        console.error("addDoc error:", error);
-        throw error;
+        console.log(error);
+        return null;
     }
 };
 
@@ -109,7 +169,7 @@ export const updateDoc = async ({ collection, id, data }) => {
 
     } catch (error) {
         console.error("updateDoc error:", error);
-        throw error;
+        return { error: "Erro ao atualizar documento" };
     }
 };
 
@@ -126,7 +186,7 @@ export const softDeleteDoc = async ({ collection, id }) => {
         return true;
     } catch (error) {
         console.error("softDeleteDoc error:", error);
-        throw error;
+        return { error: "Erro ao deletar documento" };
     }
 };
 
@@ -139,7 +199,7 @@ export const deleteDocHard = async ({ collection, id }) => {
         return true;
     } catch (error) {
         console.error("deleteDocHard error:", error);
-        throw error;
+        return { error: "Erro ao deletar documento" };
     }
 };
 
@@ -152,9 +212,6 @@ export function validateQueries(queries, res) {
             });
             return false;
         }
-
-        console.log(q)
-
         const field = q._field?.segments?.join(".") || "campo_desconhecido";
         const operator = q._op || "operador_desconhecido";
         const value = q._value;
