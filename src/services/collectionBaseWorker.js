@@ -127,7 +127,7 @@ export const addDoc = async ({ collection, data }) => {
         let toSave = { ...data };
 
         if (!toSave.estabelecimentoId) {
-            throw new Error("Campo obrigatório ausente: estabelecimentoId");
+            return { error: "Campo obrigatório ausente: estabelecimentoId" };
         }
 
         if (!toSave.id) {
@@ -135,12 +135,11 @@ export const addDoc = async ({ collection, data }) => {
         }
 
         toSave.createdAt = new Date();
+        toSave.updatedBy = null;
         toSave.isDeleted = false;
 
         // Aqui converte tudo para Date (Firestore salva como timestamp)
         toSave = convertDatesToFirestoreDate(toSave);
-
-        console.log("toSave", toSave);
 
         const result = await db.collection(collection).doc(toSave.id).set(toSave);
 
@@ -155,17 +154,21 @@ export const addDoc = async ({ collection, data }) => {
 // ======================================================================
 // UPDATE DOC
 // ======================================================================
-export const updateDoc = async ({ collection, id, data }) => {
+export const updateDoc = async ({ collection, data }) => {
     try {
-        const toUpdate = {};
+        let toUpdate = { ...data };
 
-        Object.keys(data).forEach(k => {
-            toUpdate[k] = convertValue(data[k]);
-        });
+        if (!toUpdate.id) {
+            return { error: "Campo obrigatório para atualizar: id" };
+        }
+        const docId = toUpdate.id;
+        
+        toUpdate.updatedAt = new Date();
+        toUpdate = convertDatesToFirestoreDate(toUpdate);
 
-        await db.collection(collection).doc(id).update(toUpdate);
+        await db.collection(collection).doc(docId).update(toUpdate);
 
-        return { id, ...toUpdate };
+        return { id: docId, ...toUpdate };
 
     } catch (error) {
         console.error("updateDoc error:", error);

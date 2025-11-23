@@ -1,4 +1,4 @@
-import { getAllDocs } from "../services/collectionBaseWorker.js";
+import { getAllDocs, addDoc, updateDoc } from "../services/collectionBaseWorker.js";
 import { where } from "firebase/firestore";
 import { startOfDay, endOfDay } from 'date-fns';
 
@@ -13,7 +13,16 @@ export const addAppointment = async (req, res) => {
     return res.json(saved)
 }
 
-
+export const updateAppointment = async (req, res) => {
+    const updated = await updateDoc({
+        collection: "agendamentos",
+        data: req.body
+    })
+    if (updated.error) {
+        return res.status(400).json(updated);
+    }
+    return res.json(updated)
+}
 
 export const getAppointmentByProviderAndDate = async (req, res) => {
     const { startDate, endDate, providerId } = req.body
