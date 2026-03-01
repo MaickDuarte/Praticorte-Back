@@ -5,22 +5,32 @@ import { Timestamp } from "firebase-admin/firestore";
 // ======================================================================
 // Convert values automatically (Date -> Timestamp, null -> null, etc)
 // ======================================================================
+import admin from "firebase-admin"
+
 function convertDatesToFirestoreDate(obj) {
   if (obj === null || obj === undefined) return obj;
 
-  // Já é Firestore timestamp -> converte para Date
-  if (isFirestoreTimestamp(obj)) {
-    return new Date(obj.seconds * 1000 + obj.nanoseconds / 1e6);
-  }
-
-  // String ISO → Date
-  if (typeof obj === "string" && isISODate(obj)) {
-    return new Date(obj);
-  }
-
-  // Já é Date → mantém
-  if (obj instanceof Date) {
+  // Se já é Timestamp real → mantém
+  if (obj instanceof admin.firestore.Timestamp) {
     return obj;
+  }
+
+  // Se veio serializado {_seconds,_nanoseconds}
+  if (obj?._seconds !== undefined && obj?._nanoseconds !== undefined) {
+    return new admin.firestore.Timestamp(
+      obj._seconds,
+      obj._nanoseconds
+    );
+  }
+
+  // Se é Date → converte para Timestamp real
+  if (obj instanceof Date) {
+    return admin.firestore.Timestamp.fromDate(obj);
+  }
+
+  // String ISO → converter para Timestamp
+  if (typeof obj === "string" && isISODate(obj)) {
+    return admin.firestore.Timestamp.fromDate(new Date(obj));
   }
 
   // Array → recursivo
@@ -134,7 +144,7 @@ export const addDoc = async ({ collection, data }) => {
             toSave.id = uuidv7();
         }
 
-        toSave.createdAt = new Date();
+        toSave.createdAt = admin.firestore.Timestamp.now();;
         toSave.updatedBy = null;
         toSave.isDeleted = false;
 
@@ -163,7 +173,7 @@ export const updateDoc = async ({ collection, data }) => {
         }
         const docId = toUpdate.id;
         
-        toUpdate.updatedAt = new Date();
+        toUpdate.updatedAt = admin.firestore.Timestamp.now();
         toUpdate = convertDatesToFirestoreDate(toUpdate);
 
         await db.collection(collection).doc(docId).update(toUpdate);
