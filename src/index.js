@@ -1,8 +1,10 @@
 import express from "express";
 import cors from "cors";
 import appointmentRoutes from "./routes/appointment.routes.js";
-import servicesRoutes from "./routes/services.routes.js"
-import usersRoutes from "./routes/users.routes.js"
+import servicesRoutes from "./routes/services.routes.js";
+import usersRoutes from "./routes/users.routes.js";
+import establishmentRoutes from "./routes/establishment.routes.js";
+import openingHoursRoutes from "./routes/openingHours.routes.js";
 
 const app = express();
 
@@ -13,6 +15,8 @@ app.use(express.json());
 app.use("/appointments", appointmentRoutes);
 app.use("/services", servicesRoutes);
 app.use("/users", usersRoutes);
+app.use("/establishments", establishmentRoutes);
+app.use("/openingHours", openingHoursRoutes);
 
 app.get("/", (req, res) => {
   res.send("Praticorte Backend ON");
