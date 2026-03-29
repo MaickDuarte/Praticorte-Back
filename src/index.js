@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import appointmentRoutes from "./routes/appointment.routes.js";
 import servicesRoutes from "./routes/services.routes.js"
+import usersRoutes from "./routes/users.routes.js"
 
 const app = express();
 
@@ -11,6 +12,7 @@ app.use(express.json());
 // Rotas
 app.use("/appointments", appointmentRoutes);
 app.use("/services", servicesRoutes);
+app.use("/users", usersRoutes);
 
 app.get("/", (req, res) => {
   res.send("Praticorte Backend ON");

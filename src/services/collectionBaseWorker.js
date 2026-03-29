@@ -190,6 +190,9 @@ export const updateDoc = async ({ collection, data }) => {
 // SOFT DELETE (recommended)
 // ======================================================================
 export const softDeleteDoc = async ({ collection, id }) => {
+    if (!id) {
+        return { error: "ID is required" };
+    }
     try {
         await db.collection(collection).doc(id).update({
             isDeleted: true,
